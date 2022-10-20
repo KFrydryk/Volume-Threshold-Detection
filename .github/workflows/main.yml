@@ -1,0 +1,17 @@
+name: Build
+run-name: Build ${{ github.run_number }}
+on:
+  pull_request:
+    branches:
+    - main
+jobs:
+  Build-Check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: arm-none-eabi-gcc GNU Arm Embedded Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1.5.2
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Run build script
+        run: chmod 777 ./run.sh && ./run.sh
+        shell: bash
