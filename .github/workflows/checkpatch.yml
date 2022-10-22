@@ -1,0 +1,18 @@
+name: Checkpatch
+run-name: Checkpatch ${{ github.run_number }}
+on:
+  pull_request:
+    branches:
+    - main
+jobs:
+  Checkpatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Run checkpatch
+        run: >
+          chmod 777 ./scripts/checkpatch.pl && git fetch origin && git diff 
+          ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} ${{ github.event.pull_request.head.sha }} 
+          | ./scripts/checkpatch.pl --no-tree --ignore SPDX_LICENSE_TAG,FILE_PATH_CHANGES
+        shell: bash
