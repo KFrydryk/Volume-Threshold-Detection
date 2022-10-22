@@ -15,5 +15,5 @@ include(src/platform/stm32f407G/CMakeLists.txt)
 
 
 # generate elf file
-add_arm_executable(${CMAKE_PROJECT_NAME} src/main.c src/platform/stm32f407G/startup.c)
+add_arm_executable(${CMAKE_PROJECT_NAME} src/main.c src/platform/stm32f407G/startup.c src/platform/stm32f407G/platform_init.c)
 arm_link_libraries(${CMAKE_PROJECT_NAME} ${LIBRARIES} ${DRIVERS})
