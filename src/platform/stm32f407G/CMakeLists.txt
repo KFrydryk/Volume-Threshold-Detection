@@ -1,2 +1,2 @@
 set(LIBRARIES testl)
-set(DRIVERS testd)
+set(DRIVERS testd gpio)
