@@ -1,0 +1,28 @@
+name: Unit Tests
+run-name: Unit Tests ${{ github.run_number }}
+on:
+  pull_request:
+    branches:
+    - main
+jobs:
+  Run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install prerequisites
+        run: >
+          sudo apt-get install ruby && sudo apt-get install gcovr && sudo gem install ceedling
+      - name: Run unit tests
+        run: ceedling test:all
+        shell: bash
+      - name: Generate results
+        run: >
+          ceedling gcov:all &> /dev/null;
+          ceedling utils:gcov || ls
+      - name: Archive UT results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: bin/UT/artifacts/gcov
+          retention-days: 7
