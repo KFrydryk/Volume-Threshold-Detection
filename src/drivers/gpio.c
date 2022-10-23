@@ -1,5 +1,6 @@
 #include "include/gpio.h"
 #include "platform_defs.h"
+#include "errno.h"
 #include <stdint.h>
 
 static const uint32_t port_list[] = {

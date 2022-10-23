@@ -61,9 +61,4 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 #define RCC_AHB1ENR (RCC_BASE + 0x30)
 
 
-/* ERROR CODES */
-#define ENOTSUP 134
-#define EINVAL 22
-/* TODO: move out of platform specific */
-
 #endif
