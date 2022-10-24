@@ -33,8 +33,29 @@ enum gpio_state {
 	HIGH
 };
 
+enum gpio_int_event {
+	FALLING_EDGE,
+	RISING_EDGE
+};
+
+enum gpio_port {
+	PA,
+	PB,
+	PC,
+	PD,
+	PE,
+	PF,
+	PG,
+	PH,
+	PI
+};
+
 /* use to init gpio and prefill gpio struct */
 struct gpio gpio_create(uint32_t port, uint32_t pin);
+int gpio_configure_output(struct gpio *gpio, enum gpio_otype otype);
+int gpio_configure_input(struct gpio *gpio, enum gpio_ptype ptype);
+/* NOTE: IRQ handler has to be defined separately! */
+int gpio_configure_interrupt(struct gpio *gpio, enum gpio_int_event event);
 
 /* gpio operations */
 struct gpio_ops {
