@@ -7,3 +7,6 @@ target_include_directories(testl PUBLIC  ${INCLUDE_DIRS})
 
 add_library(linked-list linked-list.c)
 target_include_directories(linked-list PUBLIC  ${INCLUDE_DIRS})
+
+add_library(thresholds thresholds.c)
+target_include_directories(thresholds PUBLIC  ${INCLUDE_DIRS})
