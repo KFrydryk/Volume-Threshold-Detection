@@ -18,8 +18,8 @@ jobs:
         shell: bash
       - name: Generate results
         run: >
-          ceedling gcov:all &> /dev/null;
-          ceedling utils:gcov || ls
+          ceedling gcov:all;
+          ceedling utils:gcov
       - name: Archive UT results
         uses: actions/upload-artifact@v3
         with:
