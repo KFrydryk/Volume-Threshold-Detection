@@ -3,6 +3,8 @@
 #include "errno.h"
 #include <stdint.h>
 
+#define GPIO_IRQ_PRIO 3
+
 static const uint32_t port_list[] = {
 	GPIOA_BASE,
 	GPIOB_BASE,
@@ -15,6 +17,13 @@ static const uint32_t port_list[] = {
 	GPIOI_BASE,
 	GPIOJ_BASE,
 	GPIOK_BASE
+};
+
+static const uint32_t exticr_list[] = {
+	SYSCFG_EXTICR1,
+	SYSCFG_EXTICR2,
+	SYSCFG_EXTICR3,
+	SYSCFG_EXTICR4
 };
 
 static int gpio_apply_config(struct gpio *gpio)
@@ -47,6 +56,102 @@ static int gpio_configure(struct gpio *gpio, enum gpio_mode mode,
 	gpio->data.otype = otype;
 	gpio->data.ptype = ptype;
 	gpio_apply_config(gpio);
+	return 0;
+}
+
+int gpio_configure_output(struct gpio *gpio, enum gpio_otype otype)
+{
+	if (gpio == NULL)
+		return -EINVAL;
+
+	return gpio->ops->configure(gpio, OUTPUT, otype, NOT_IN);
+}
+
+int gpio_configure_input(struct gpio *gpio, enum gpio_ptype ptype)
+{
+	if (gpio == NULL)
+		return -EINVAL;
+
+	return gpio->ops->configure(gpio, INPUT, NOT_OUT, ptype);
+}
+
+static uint32_t gpio_get_pin_excint(uint32_t pin)
+{
+	uint32_t irq;
+
+	switch (pin) {
+	case 0:
+		irq = EXTI0_IRQn;
+		break;
+	case 1:
+		irq = EXTI1_IRQn;
+		break;
+	case 2:
+		irq = EXTI2_IRQn;
+		break;
+	case 3:
+		irq = EXTI3_IRQn;
+		break;
+	case 4:
+		irq = EXTI4_IRQn;
+		break;
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+	case 9:
+		irq = EXTI9_5_IRQn;
+		break;
+	case 10:
+	case 11:
+	case 12:
+	case 13:
+	case 14:
+	case 15:
+		irq = EXTI15_10_IRQn;
+		break;
+
+	default:
+		break;
+	}
+
+	return irq;
+}
+
+int gpio_configure_interrupt(struct gpio *gpio, enum gpio_int_event event)
+{
+	uint32_t irq;
+	/* check if pin and port nr in hw bounds */
+	if ((gpio->data.port > 0x08) || (gpio->data.pin > 0x0F))
+		return -EINVAL;
+
+	/* System configuration controller clock enable */
+	set_bits(RCC_APB2ENR, SYSCFGEN);
+
+	/* Set SYSCFG to connect the button EXTI line to GPIO port */
+	clear_bits(exticr_list[gpio->data.pin/4], 0xF << ((gpio->data.pin % 4) * 4));
+	set_bits(exticr_list[gpio->data.pin/4], gpio->data.port << ((gpio->data.pin % 4) * 4));
+
+
+	/* Setup the button's EXTI line as an interrupt */
+	set_bits(EXTI_IMR, 1 << gpio->data.pin);
+	if (event == FALLING_EDGE) {
+		/* Disable the 'rising edge' trigger */
+		clear_bits(EXTI_RTSR, (1 << gpio->data.pin));
+		/* Enable the 'falling edge' trigger */
+		set_bits(EXTI_FTSR, (1 << gpio->data.pin));
+	} else {
+		/* Enable the 'rising edge' trigger */
+		set_bits(EXTI_RTSR, (1 << gpio->data.pin));
+		/* Disable the 'falling edge' trigger */
+		clear_bits(EXTI_FTSR, (1 << gpio->data.pin));
+	}
+
+	irq = gpio_get_pin_excint(gpio->data.pin);
+
+	irq_set_priority(irq, GPIO_IRQ_PRIO);
+	irq_enable(irq);
+
 	return 0;
 }
 
