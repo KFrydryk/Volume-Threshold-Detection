@@ -7,6 +7,8 @@ MEMORY
 }
 /* dont use ccmram */
 
+ENTRY(startup);
+
 SECTIONS
 {
     .text : 				/* Define output file TEXT section */
