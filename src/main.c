@@ -1,29 +1,57 @@
 #include <stddef.h>
 #include "platform/stm32f407G/include/platform_init.h"
+#include "platform/stm32f407G/include/platform_defs.h"
 #include "gpio.h"
+#include "linked-list.h"
+#include "thresholds.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define BUTT_PORT 0
 #define BUTT_PIN 0
 
+struct threshold thr;
+
+static uint32_t thresholds[] = {
+	1,
+	2,
+	3,
+	4,
+	5,
+	6
+};
+
+void  __attribute__ ((interrupt)) EXTI0_IRQHandler(void)
+{
+	if (*(uint32_t *)EXTI_PR & (1 << BUTT_PIN)) {
+		*(uint32_t *)EXTI_PR |= (1 << BUTT_PIN);
+		threshold_next(&thr);
+	}
+}
+
+
 int main()
 {
-	int pressed = 0;
+
+	struct linked_list llis[sizeof(thresholds)/sizeof(uint32_t)];
+	struct gpio BUT;
 
 	platform_init();
 	gpio_periph_init(NULL);
 
-	struct gpio BUT = gpio_create(BUTT_PORT, BUTT_PIN);
-	struct gpio LED = gpio_create(3, 13);
-
+	BUT = gpio_create(BUTT_PORT, BUTT_PIN);
 	BUT.ops->configure(&BUT, INPUT, NOT_OUT, PULLDOWN);
-	LED.ops->configure(&LED, OUTPUT, PUSH_PULL, NOT_IN);
+	gpio_configure_interrupt(&BUT, RISING_EDGE);
+
+	for (int i = 0; i < sizeof(thresholds)/sizeof(uint32_t); i++) {
+		linked_list_init(&llis[i]);
+		llis[i].data = &thresholds[i];
+		linked_list_append(&llis[0], &llis[i]);
+	}
+
+	threshold_init(&thr, &llis[0]);
 
 	while (1) {
-		pressed = BUT.ops->read_val(&BUT);
-		if (pressed)
-			LED.ops->write_val(&LED, HIGH);
-		else
-			LED.ops->write_val(&LED, LOW);
 	}
 	
 	return 0;
