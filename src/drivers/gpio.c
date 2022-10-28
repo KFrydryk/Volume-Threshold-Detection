@@ -38,6 +38,24 @@ static int gpio_apply_config(struct gpio *gpio)
 	} else if (gpio->data.mode == INPUT) {
 		clear_bits(port_addr + GPIO_PUPDR, 0x3 << (gpio->data.pin*2));
 		set_bits(port_addr + GPIO_PUPDR, gpio->data.ptype << (gpio->data.pin*2));
+	} else if (gpio->data.mode == ALTERNATE) {
+		/* can alternate function require otype and ptype to be set? */
+		if (gpio->data.ptype != NOT_IN) {
+			clear_bits(port_addr + GPIO_PUPDR, 0x3 << (gpio->data.pin*2));
+			set_bits(port_addr + GPIO_PUPDR, gpio->data.ptype << (gpio->data.pin*2));
+		}
+		if (gpio->data.otype != NOT_OUT) {
+			clear_bits(port_addr + GPIO_OTYPER, (1 << gpio->data.pin));
+			set_bits(port_addr + GPIO_OTYPER, gpio->data.otype << gpio->data.pin);
+		}
+		/* set AF in Low or High parto fo GPIO_AF depending on pin */
+		if (gpio->data.pin < 8) {
+			clear_bits(port_addr + GPIO_AFRL, 0xF << gpio->data.pin * 4);
+			set_bits(port_addr + GPIO_AFRL, gpio->data.af << gpio->data.pin * 4);
+		} else {
+			clear_bits(port_addr + GPIO_AFRH, 0xF << (gpio->data.pin - 8) * 4);
+			set_bits(port_addr + GPIO_AFRH, gpio->data.af << (gpio->data.pin - 8) * 4);
+		}
 	} else {
 		return -ENOTSUP;
 	}
@@ -46,7 +64,7 @@ static int gpio_apply_config(struct gpio *gpio)
 }
 
 static int gpio_configure(struct gpio *gpio, enum gpio_mode mode,
-			  enum gpio_otype otype, enum gpio_ptype ptype)
+			  enum gpio_otype otype, enum gpio_ptype ptype, enum gpio_af af)
 {
 	if (mode == INPUT && otype != NOT_OUT)
 		return -EINVAL;
@@ -55,6 +73,7 @@ static int gpio_configure(struct gpio *gpio, enum gpio_mode mode,
 	gpio->data.mode = mode;
 	gpio->data.otype = otype;
 	gpio->data.ptype = ptype;
+	gpio->data.af = af;
 	gpio_apply_config(gpio);
 	return 0;
 }
@@ -64,7 +83,7 @@ int gpio_configure_output(struct gpio *gpio, enum gpio_otype otype)
 	if (gpio == NULL)
 		return -EINVAL;
 
-	return gpio->ops->configure(gpio, OUTPUT, otype, NOT_IN);
+	return gpio->ops->configure(gpio, OUTPUT, otype, NOT_IN, SYSTEM);
 }
 
 int gpio_configure_input(struct gpio *gpio, enum gpio_ptype ptype)
@@ -72,7 +91,7 @@ int gpio_configure_input(struct gpio *gpio, enum gpio_ptype ptype)
 	if (gpio == NULL)
 		return -EINVAL;
 
-	return gpio->ops->configure(gpio, INPUT, NOT_OUT, ptype);
+	return gpio->ops->configure(gpio, INPUT, NOT_OUT, ptype, SYSTEM);
 }
 
 static uint32_t gpio_get_pin_excint(uint32_t pin)
@@ -153,6 +172,12 @@ int gpio_configure_interrupt(struct gpio *gpio, enum gpio_int_event event)
 	irq_enable(irq);
 
 	return 0;
+}
+
+int gpio_configure_af(struct gpio *gpio, enum gpio_otype otype, enum gpio_ptype ptype,
+		      enum gpio_af af)
+{
+	return gpio->ops->configure(gpio, ALTERNATE, otype, ptype, af);
 }
 
 static int gpio_write_val(struct gpio *gpio, enum gpio_state val)
