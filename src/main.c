@@ -40,7 +40,7 @@ int main()
 	gpio_periph_init(NULL);
 
 	BUT = gpio_create(BUTT_PORT, BUTT_PIN);
-	BUT.ops->configure(&BUT, INPUT, NOT_OUT, PULLDOWN);
+	gpio_configure_input(&BUT, PULLDOWN);
 	gpio_configure_interrupt(&BUT, RISING_EDGE);
 
 	for (int i = 0; i < sizeof(thresholds)/sizeof(uint32_t); i++) {
