@@ -54,6 +54,50 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 #define FLASH_IFACE_BASE 0x40023C00
 #define FLASH_ACR (FLASH_IFACE_BASE + 0x00)
 
+/* DMA defines */
+#define DMA1_BASE 0x40026000
+#define DMA2_BASE 0x40026400
+
+#define RCC_DMA1EN (1 << 21)
+#define RCC_DMA2EN (1 << 22)
+
+#define DMA1_LISR (DMA1_BASE + 0x00)
+#define DMA1_HISR (DMA1_BASE + 0x04)
+#define DMA2_LISR (DMA2_BASE + 0x00)
+#define DMA2_HISR (DMA2_BASE + 0x04)
+#define DMA1_LIFCR (DMA1_BASE + 0x08)
+#define DMA1_SxCR(channel) (DMA1_BASE + 0x10 + 0x18 * channel)
+#define DMA2_SxCR(channel) (DMA2_BASE + 0x10 + 0x18 * channel)
+#define DMA1_SxNDTR(channel) (DMA1_BASE + 0x14 + 0x18 * channel)
+#define DMA2_SxNDTR(channel) (DMA2_BASE + 0x14 + 0x18 * channel)
+#define DMA1_SxPAR(channel) (DMA1_BASE + 0x18 + 0x18 * channel)
+#define DMA2_SxPAR(channel) (DMA2_BASE + 0x18 + 0x18 * channel)
+#define DMA1_SxM0AR(channel) (DMA1_BASE + 0x1C + 0x18 * channel)
+#define DMA2_SxM0AR(channel) (DMA2_BASE + 0x1C + 0x18 * channel)
+#define DMA1_SxM1AR(channel) (DMA1_BASE + 0x20 + 0x18 * channel)
+#define DMA2_SxM1AR(channel) (DMA2_BASE + 0x20 + 0x18 * channel)
+#define DMA1_SxFCR(channel) (DMA1_BASE + 0x24 + 0x18 * channel)
+#define DMA2_SxFCR(channel) (DMA2_BASE + 0x24 + 0x18 * channel)
+
+#define DMA_CHSEL(x) (x << 25)
+#define DMA_PRIO(prio_level) (prio_level << 16)
+#define DMA_MSIZE(size) (size << 13)
+#define DMA_PSIZE(size) (size << 11)
+#define DMA_MINC (1 << 10)
+#define DMA_PINC (1 << 9)
+#define DMA_CIRC (1 << 8)
+#define DMA_DIR(dir) (dir << 6)
+#define DMA_EN (1 << 0)
+
+#define DMA_FIFO_EN (1 << 7)
+#define DMA_TCIE (1 << 4)
+
+#define DMA_TEIF0 (1 << 5)
+#define DMA_TEIF1 (1 << 11)
+#define DMA_TEIF2 (1 << 21)
+#define DMA_TEIF3 (1 << 27)
+
+
 /* GPIO defines */
 #define GPIO_BASE 0x40020000
 #define GPIOA_BASE (GPIO_BASE + 0x0000)
