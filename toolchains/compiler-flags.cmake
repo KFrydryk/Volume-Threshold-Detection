@@ -1,8 +1,8 @@
 # Compiler flags used for C and ASM files
-set(CORE_FLAGS "-mcpu=cortex-m4 -mthumb -nostdlib")
+set(CORE_FLAGS "-mcpu=cortex-m4 -mthumb -nostartfiles")
 
 # Debug flag. Also dont use stdlib
-set(DEBUG_FLAGS "${CORE_FLAGS} -g -nostdlib -O0")
+set(DEBUG_FLAGS "${CORE_FLAGS} -g -O0 -nostartfiles")
 
 # Hardware float support
 set(CORE_FLAGS "${CORE_FLAGS} -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math")
