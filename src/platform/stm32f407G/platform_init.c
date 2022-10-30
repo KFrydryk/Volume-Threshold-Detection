@@ -9,7 +9,7 @@
 #define PLLRDY (1 << 25)
 
 /* RCC_PLLCFGR */
-#define PLL_Q_4 (4 << 24)
+#define PLL_Q_7 (7 << 24)
 #define PLLSRC (1 << 22) /* set for HSE, unset HSI */
 #define PLLP2 (0<<16) /* Main PLL (PLL) division factor for main system clock */
 #define PLLN_168 (168 << 6)
@@ -46,14 +46,14 @@ void platform_init(void)
 	 *Fpll_out = Fvco / PLLP
 	 *Fusb,sdio,rng = Fvco / PLLQ
 	 */
-	write_reg(RCC_PLLCFGR, PLL_Q_4 | PLLSRC | PLLP2 | PLLN_168 | PLLM_4);
+	write_reg(RCC_PLLCFGR, PLL_Q_7 | PLLSRC | PLLP2 | PLLN_168 | PLLM_4);
 	write_reg(RCC_CR, read_reg(RCC_CR) | PLLON);
 	/* wait until enabled */
 	while (!(read_reg(RCC_CR) & PLLRDY)) {
 	}
 
 	/* set prescalers */
-	write_reg(RCC_CFGR, read_reg(RCC_CR) | PPRE1_4 | PPRE2_2 | SW_PLL);
+	write_reg(RCC_CFGR, read_reg(RCC_CFGR) | PPRE1_4 | PPRE2_2 | SW_PLL);
 	/* wait until enabled */
 	while (!(read_reg(RCC_CFGR) | SWS_PLL)) {
 	}
