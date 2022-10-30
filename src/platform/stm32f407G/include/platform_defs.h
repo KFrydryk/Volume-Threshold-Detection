@@ -28,11 +28,48 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 #define RCC_CR (RCC_BASE + 0x00)
 #define RCC_PLLCFGR (RCC_BASE + 0x04)
 #define RCC_CFGR (RCC_BASE + 0x08)
+#define RCC_APB1ENR (RCC_BASE + 0x40)
 #define RCC_APB2ENR (RCC_BASE + 0x44)
 #define RCC_AHB1ENR (RCC_BASE + 0x30)
 
+#define RCC_PLLI2S (RCC_BASE + 0x84)
+#define RCC_PLLI2SON (1 << 26)
+#define RCC_PLLI2SRDY (1 << 27)
+#define PLLI2SR(x) (x << 28)
+#define PLLI2SN(x) (x << 6)
+
 /* RCC_APB2ENR defines */
 #define SYSCFGEN (1 << 14)
+
+/* RCC_APB1ENR defines */
+#define SPI1EN (1 << 12)
+#define SPI2EN (1 << 14)
+#define SPI3EN (1 << 15)
+
+/* I2S defines */
+#define I2S2_BASE 0x40003800
+#define I2S3_BASE 0x40003C00
+#define I2S2_CR2 (I2S2_BASE + 0x04)
+#define I2S3_CR2 (I2S3_BASE + 0x04)
+#define I2S2_I2SCFGR (I2S2_BASE + 0x1C)
+#define I2S2_I2SPR (I2S2_BASE + 0x20)
+#define I2S3_I2SCFGR (I2S3_BASE + 0x1C)
+#define I2S3_I2SPR (I2S3_BASE + 0x20)
+
+#define SPI_SETUP_I2S (1 << 11)
+#define I2S_I2SE (1 << 10)
+#define I2S_I2SCFG(x) (x << 8)
+#define I2S_I2SSTD(x) (x << 4)
+#define I2S_CKPOL (1 << 3)
+#define I2S_DATLEN(x) (x << 1)
+#define I2S_CHLEN (1 << 0)
+
+#define I2S_MCKOE (1 << 9)
+#define I2S_ODD (1 << 8)
+#define I2S_I2SDIV(x) (x << 0)
+
+#define I2S2_RXDMAEN (1 << 0)
+#define I2S2_TXDMAEN (1 << 1)
 
 /* syscfg defines */
 #define SYSCFG_BASE 0x40013800
