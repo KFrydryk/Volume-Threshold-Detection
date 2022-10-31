@@ -31,12 +31,16 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 #define RCC_APB1ENR (RCC_BASE + 0x40)
 #define RCC_APB2ENR (RCC_BASE + 0x44)
 #define RCC_AHB1ENR (RCC_BASE + 0x30)
+#define RCC_APB1RSTR (RCC_BASE + 0x20)
 
 #define RCC_PLLI2S (RCC_BASE + 0x84)
 #define RCC_PLLI2SON (1 << 26)
 #define RCC_PLLI2SRDY (1 << 27)
 #define PLLI2SR(x) (x << 28)
 #define PLLI2SN(x) (x << 6)
+
+#define RCC_APB1ENR_TIM2EN (1 << 0)
+#define RCC_RST_TIM2 (1 << 6)
 
 /* RCC_APB2ENR defines */
 #define SYSCFGEN (1 << 14)
@@ -90,6 +94,20 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 /* flash defines */
 #define FLASH_IFACE_BASE 0x40023C00
 #define FLASH_ACR (FLASH_IFACE_BASE + 0x00)
+
+/* Timer defines */
+#define TIM2_BASE 0x40000000
+#define TIM2_CR1 (TIM2_BASE + 0x00)
+#define TIM2_PSC (TIM2_BASE + 0x28)
+#define TIM2_ARR (TIM2_BASE + 0x2C)
+#define TIM2_EGR (TIM2_BASE + 0x14)
+#define TIM2_DIER (TIM2_BASE + 0x0C)
+#define TIM2_SR (TIM2_BASE + 0x10)
+
+#define TIM_CEN (1 << 0)
+#define TIM_UG (1 << 0)
+#define TIM_UIE (1 << 0)
+#define TIM_UIF (1 << 0)
 
 /* DMA defines */
 #define DMA1_BASE 0x40026000
