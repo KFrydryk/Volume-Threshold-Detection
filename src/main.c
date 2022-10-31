@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "low-pass-Filter.h"
+#include "gp-timer.h"
 
 #define BUTT_PORT 0
 #define BUTT_PIN 0
@@ -33,6 +34,15 @@ int32_t pcm_tab[PCM_ARR_SIZE];
 uint32_t err_tab[PCM_ARR_SIZE];
 static int last_index;
 
+struct gp_timer tmr;
+bool is_in_delay_loop;
+
+void  __attribute__ ((interrupt)) TIM2_IRQHandler(void)
+{
+	is_in_delay_loop = false;
+	gp_timer_stop(&tmr);
+	clear_bits(TIM2_SR, TIM_UIF);
+}
 
 void  __attribute__ ((interrupt)) EXTI0_IRQHandler(void)
 {
@@ -80,6 +90,15 @@ int main()
 
 	BUT = gpio_create(BUTT_PORT, BUTT_PIN);
 	LED = gpio_create(3, 15);
+
+	gp_timer_init(&tmr, 2);
+	/* configure for 3s delay. APB clk prescaler is 2, so 8400*/
+	gp_timer_configure(&tmr, 8400, 30000);
+	gp_timer_start(&tmr);
+	is_in_delay_loop = true;
+
+	while (is_in_delay_loop)
+		;
 
 	gpio_configure_input(&BUT, PULLDOWN);
 	gpio_configure_output(&LED, PUSH_PULL);
