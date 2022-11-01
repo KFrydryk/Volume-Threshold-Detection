@@ -1,0 +1,17 @@
+name: CppChech
+run-name: CppChech ${{ github.run_number }}
+on:
+  pull_request:
+    branches:
+    - main
+jobs:
+  Cpp-Check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install rperequisites
+        run: sudo apt-get install -y cppcheck
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Run CppCheck
+        run: cppcheck ./src/
+        shell: bash
