@@ -21,21 +21,32 @@ struct threshold thr;
 low_pass_Filter fltr;
 
 static uint32_t thresholds[] = {
-	1,
-	2,
-	3,
-	4,
-	5,
-	6
+	400,
+	500,
+	600,
+	650,
+	800,
+	1000
 };
+static const size_t thresholds_num = sizeof(thresholds)/sizeof(uint32_t);
 
 uint32_t tab[PDM_ARR_SIZE];
 int32_t pcm_tab[PCM_ARR_SIZE];
 uint32_t err_tab[PCM_ARR_SIZE];
 static int last_index;
 
+struct gpio status_led;
+struct gp_timer status_led_tmr;
+bool status_led_on;
 struct gp_timer tmr;
 bool is_in_delay_loop;
+
+void  __attribute__ ((interrupt)) TIM5_IRQHandler(void)
+{
+	status_led_on = !status_led_on;
+	status_led.ops->write_val(&status_led, status_led_on);
+	clear_bits(TIM5_SR, TIM_UIF);
+}
 
 void  __attribute__ ((interrupt)) TIM2_IRQHandler(void)
 {
@@ -81,33 +92,51 @@ int main()
 {
 	struct linked_list llis[sizeof(thresholds)/sizeof(uint32_t)];
 	struct gpio BUT;
-	struct gpio LED;
+	struct gpio LED_HI;
+	struct gpio LED_LOW;
 	struct i2s mic;
 	struct dma copier;
 
 	platform_init();
 	gpio_periph_init(NULL);
 
+	/* create GPIOs*/
 	BUT = gpio_create(BUTT_PORT, BUTT_PIN);
-	LED = gpio_create(3, 15);
+	/* choose from PD12, 13, 14, 15 for onboard leds */
+	LED_HI = gpio_create(3, 15);
+	LED_LOW = gpio_create(3, 13);
+	status_led = gpio_create(3, 12);
 
+	gpio_configure_input(&BUT, PULLDOWN);
+	gpio_configure_output(&LED_HI, PUSH_PULL);
+	gpio_configure_output(&LED_LOW, PUSH_PULL);
+	gpio_configure_output(&status_led, PUSH_PULL);
+	gpio_configure_interrupt(&BUT, RISING_EDGE);
+
+	/* setup timers: status led timer and delay */
 	gp_timer_init(&tmr, 2);
+	gp_timer_init(&status_led_tmr, 5);
 	/* configure for 3s delay. APB clk prescaler is 2, so 8400*/
 	gp_timer_configure(&tmr, 8400, 30000);
+	gp_timer_configure(&status_led_tmr, 8400, 5000);
 	gp_timer_start(&tmr);
-	is_in_delay_loop = true;
+	gp_timer_start(&status_led_tmr);
 
+	/* delay 3s */
+	is_in_delay_loop = true;
 	while (is_in_delay_loop)
 		;
 
-	gpio_configure_input(&BUT, PULLDOWN);
-	gpio_configure_output(&LED, PUSH_PULL);
-	gpio_configure_interrupt(&BUT, RISING_EDGE);
-
-	for (int i = 0; i < sizeof(thresholds)/sizeof(uint32_t); i++) {
+	/* populate thresholds list */
+	for (int i = 0; i < thresholds_num; i++) {
 		linked_list_init(&llis[i]);
 		llis[i].data = &thresholds[i];
-		linked_list_append(&llis[0], &llis[i]);
+
+		/* skip linking for initial list */
+		if (i == 0)
+			continue;
+
+		linked_list_append(&llis[i - 1], &llis[i]);
 	}
 
 	threshold_init(&thr, &llis[0]);
@@ -116,7 +145,7 @@ int main()
 	dma_init(&copier, 1, 3, 0);
 	dma_configure(&copier, DMA_PER_TO_MEM, false, true, DMA_ALIGN_H_WORD, DMA_ALIGN_H_WORD,
 		      true, DMA_PRIO_LOW, false);
-	dma_set_data_cfg(&copier, 0x4000380c, tab, sizeof(tab)/2);
+	dma_set_data_cfg(&copier, 0x4000380c, tab, sizeof(tab)/2); /* TODO: pesky raw address */
 
 	/* i2s2 init*/
 	i2s_init(&mic, &copier, 2, 3, 1, 10, 2);
@@ -137,10 +166,14 @@ int main()
 
 		avg = avg/PCM_ARR_SIZE;
 
-		if (avg > 650)
-			LED.ops->write_val(&LED, HIGH);
-		else
-			LED.ops->write_val(&LED, LOW);
+		if (avg > thr.val) {
+			/* TODO: dont use ops call. use api */
+			LED_HI.ops->write_val(&LED_HI, HIGH);
+			LED_LOW.ops->write_val(&LED_LOW, LOW);
+		} else {
+			LED_HI.ops->write_val(&LED_HI, LOW);
+			LED_LOW.ops->write_val(&LED_LOW, HIGH);
+		}
 	}
 	
 	return 0;
