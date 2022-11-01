@@ -40,7 +40,9 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 #define PLLI2SN(x) (x << 6)
 
 #define RCC_APB1ENR_TIM2EN (1 << 0)
-#define RCC_RST_TIM2 (1 << 6)
+#define RCC_APB1ENR_TIM5EN (1 << 3)
+#define RCC_RST_TIM2 (1 << 0)
+#define RCC_RST_TIM5 (1 << 3)
 
 /* RCC_APB2ENR defines */
 #define SYSCFGEN (1 << 14)
@@ -103,6 +105,13 @@ static inline void clear_bits(uint32_t addr, uint32_t val)
 #define TIM2_EGR (TIM2_BASE + 0x14)
 #define TIM2_DIER (TIM2_BASE + 0x0C)
 #define TIM2_SR (TIM2_BASE + 0x10)
+#define TIM5_BASE 0x40000C00
+#define TIM5_CR1 (TIM5_BASE + 0x00)
+#define TIM5_PSC (TIM5_BASE + 0x28)
+#define TIM5_ARR (TIM5_BASE + 0x2C)
+#define TIM5_EGR (TIM5_BASE + 0x14)
+#define TIM5_DIER (TIM5_BASE + 0x0C)
+#define TIM5_SR (TIM5_BASE + 0x10)
 
 #define TIM_CEN (1 << 0)
 #define TIM_UG (1 << 0)
