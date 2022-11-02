@@ -125,11 +125,15 @@ int i2s_init(struct i2s *i2s, struct dma *dma, uint32_t in_port, uint32_t in_pin
 
 	i2s->ops = &ops;
 
-	i2s->io_in = gpio_create(in_port, in_pin);
-	i2s->io_clk = gpio_create(clk_port, clk_pin);
+	ret = gpio_init(&i2s->io_in, in_port, in_pin);
+	if (ret < 0)
+		return -EINVAL;
+	ret = gpio_init(&i2s->io_clk, clk_port, clk_pin);
+	if (ret < 0)
+		return -EINVAL;
 	ret = gpio_configure_af(&i2s->io_in, NOT_OUT, PULLUP, 5); //hardcode for i2s2
-		if (ret < 0)
-			return -EINVAL;
+	if (ret < 0)
+		return -EINVAL;
 	ret = gpio_configure_af(&i2s->io_clk, PUSH_PULL, NO_PULL, 5); //hardcode for i22
 
 	return ret;
