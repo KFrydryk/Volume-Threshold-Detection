@@ -11,11 +11,14 @@
 #include "low-pass-Filter.h"
 #include "gp-timer.h"
 
+/* time in ms */
+#define AVERAGING_TIME 500
+
 #define BUTT_PORT 0
 #define BUTT_PIN 0
 
 #define PDM_ARR_SIZE 48
-#define PCM_ARR_SIZE 512
+#define PCM_ARR_SIZE (AVERAGING_TIME/2)
 
 struct threshold thr;
 low_pass_Filter fltr;
@@ -26,13 +29,17 @@ static uint32_t thresholds[] = {
 	600,
 	650,
 	800,
-	1000
+	3200
 };
 static const size_t thresholds_num = sizeof(thresholds)/sizeof(uint32_t);
 
+/* hold 1ms of samples*/
 uint32_t tab[PDM_ARR_SIZE];
+uint32_t tab2[PDM_ARR_SIZE];
+int32_t pcm_partial_tab[PDM_ARR_SIZE];
+static int last_index_partial;
+/* hold intrest range of samples */
 int32_t pcm_tab[PCM_ARR_SIZE];
-uint32_t err_tab[PCM_ARR_SIZE];
 static int last_index;
 
 struct gpio status_led;
@@ -40,6 +47,17 @@ struct gp_timer status_led_tmr;
 bool status_led_on;
 struct gp_timer tmr;
 bool is_in_delay_loop;
+
+static int32_t avg_abs_int32(int32_t *arr, size_t len)
+{
+	int64_t temp = 0;
+
+	for (int i = 0; i < len; i++)
+		temp += abs(arr[i]);
+
+	temp = temp/len;
+	return (int32_t)(temp);
+}
 
 void  __attribute__ ((interrupt)) TIM5_IRQHandler(void)
 {
@@ -77,10 +95,14 @@ void  __attribute__ ((interrupt)) DMA1_Stream3_IRQHandler(void)
 		}
 
 		/* filter put is not complex, but filter get should be moved outside of interrupt */
-		pcm_tab[last_index++] = low_pass_Filter_get(&fltr);
+		pcm_partial_tab[last_index_partial++] = low_pass_Filter_get(&fltr);
 
-		if (last_index == PCM_ARR_SIZE)
-			last_index = 0;
+		if (last_index_partial == PDM_ARR_SIZE) {
+			last_index_partial = 0;
+			pcm_tab[last_index++] = avg_abs_int32(pcm_partial_tab, PDM_ARR_SIZE);
+			if (last_index == PCM_ARR_SIZE)
+				last_index = 0;
+		}
 	}
 
 	set_bits(DMA1_LIFCR, (1 << 27) | (1 << 26));
@@ -96,6 +118,7 @@ int main()
 	struct gpio LED_LOW;
 	struct i2s mic;
 	struct dma copier;
+	int32_t avg;
 
 	platform_init();
 	gpio_periph_init(NULL);
@@ -156,15 +179,8 @@ int main()
 	dma_enable(&copier);
 	dma_int_enable(&copier);
 
-	/* must fit sum of pcm_tab elements */
-	int64_t avg;
 	while (1) {
-		avg = 0;
-
-		for (int i = 0; i < PCM_ARR_SIZE; i++)
-			avg += abs(pcm_tab[i]);
-
-		avg = avg/PCM_ARR_SIZE;
+		avg = avg_abs_int32(pcm_tab, PCM_ARR_SIZE);
 
 		if (avg > thr.val) {
 			/* TODO: dont use ops call. use api */
