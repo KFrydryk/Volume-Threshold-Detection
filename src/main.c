@@ -10,9 +10,7 @@
 #include <stdbool.h>
 #include "low-pass-Filter.h"
 #include "gp-timer.h"
-
-/* time in ms */
-#define AVERAGING_TIME 500
+#include "parameters.h"
 
 #define BUTT_PORT 0
 #define BUTT_PIN 0
@@ -22,16 +20,6 @@
 
 struct threshold thr;
 low_pass_Filter fltr;
-
-static uint32_t thresholds[] = {
-	400,
-	500,
-	600,
-	650,
-	800,
-	3200
-};
-static const size_t thresholds_num = sizeof(thresholds)/sizeof(uint32_t);
 
 /* hold 1ms of samples*/
 uint32_t tab[PDM_ARR_SIZE];
@@ -90,7 +78,7 @@ void  __attribute__ ((interrupt)) DMA1_Stream3_IRQHandler(void)
 	for (int i = 0; i < PDM_ARR_SIZE; i++) {
 		for (size_t j = 0; j < 32; j++) {
 			/* MSB first */
-			tmp_val = ((tab[i] << j) & 0x80000000) ? 32000 : -32000;
+			tmp_val = ((tab[i] << j) & 0x80000000) ? INT32_MAX : INT32_MIN;
 			low_pass_Filter_put(&fltr, tmp_val);
 		}
 
