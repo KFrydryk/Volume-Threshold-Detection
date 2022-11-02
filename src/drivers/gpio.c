@@ -78,22 +78,6 @@ static int gpio_configure(struct gpio *gpio, enum gpio_mode mode,
 	return 0;
 }
 
-int gpio_configure_output(struct gpio *gpio, enum gpio_otype otype)
-{
-	if (gpio == NULL)
-		return -EINVAL;
-
-	return gpio->ops->configure(gpio, OUTPUT, otype, NOT_IN, SYSTEM);
-}
-
-int gpio_configure_input(struct gpio *gpio, enum gpio_ptype ptype)
-{
-	if (gpio == NULL)
-		return -EINVAL;
-
-	return gpio->ops->configure(gpio, INPUT, NOT_OUT, ptype, SYSTEM);
-}
-
 static uint32_t gpio_get_pin_excint(uint32_t pin)
 {
 	uint32_t irq;
@@ -137,7 +121,7 @@ static uint32_t gpio_get_pin_excint(uint32_t pin)
 	return irq;
 }
 
-int gpio_configure_interrupt(struct gpio *gpio, enum gpio_int_event event)
+static int gpio_config_int(struct gpio *gpio, enum gpio_int_event event)
 {
 	uint32_t irq;
 	/* check if pin and port nr in hw bounds */
@@ -174,12 +158,6 @@ int gpio_configure_interrupt(struct gpio *gpio, enum gpio_int_event event)
 	return 0;
 }
 
-int gpio_configure_af(struct gpio *gpio, enum gpio_otype otype, enum gpio_ptype ptype,
-		      enum gpio_af af)
-{
-	return gpio->ops->configure(gpio, ALTERNATE, otype, ptype, af);
-}
-
 static int gpio_write_val(struct gpio *gpio, enum gpio_state val)
 {
 	uint32_t port_addr = port_list[gpio->data.port];
@@ -208,25 +186,27 @@ static int gpio_read_val(struct gpio *gpio)
 static const struct gpio_ops gpio_operations = {
 	.configure = gpio_configure,
 	.read_val = gpio_read_val,
-	.write_val = gpio_write_val
+	.write_val = gpio_write_val,
+	.configure_interrupt = gpio_config_int
 };
 
-/* use to init gpio and prefill gpio struct */
-struct gpio gpio_create(uint32_t port, uint32_t pin)
-{
-	struct gpio gpio_dev;
-
-	gpio_dev.data.port = port;
-	gpio_dev.data.pin = pin;
-	gpio_dev.ops = &gpio_operations;
-
-	return gpio_dev;
-};
-
-int gpio_periph_init(void *data)
+int gpio_periph_init(void)
 {
 	/* enable all gpio */
 	write_reg(RCC_AHB1ENR, (0xff));
 
 	return 0;
 }
+
+/* use to init gpio and prefill gpio struct */
+int gpio_init(struct gpio *gpio, uint32_t port, uint32_t pin)
+{
+	if (gpio == NULL)
+		return -ENODEV;
+
+	gpio->data.port = port;
+	gpio->data.pin = pin;
+	gpio->ops = &gpio_operations;
+
+	return 0;
+};

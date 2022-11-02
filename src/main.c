@@ -50,7 +50,7 @@ static int32_t avg_abs_int32(int32_t *arr, size_t len)
 void  __attribute__ ((interrupt)) TIM5_IRQHandler(void)
 {
 	status_led_on = !status_led_on;
-	status_led.ops->write_val(&status_led, status_led_on);
+	gpio_write(&status_led, status_led_on);
 	clear_bits(TIM5_SR, TIM_UIF);
 }
 
@@ -107,16 +107,17 @@ int main()
 	struct i2s mic;
 	struct dma copier;
 	int32_t avg;
+	int err;
 
 	platform_init();
-	gpio_periph_init(NULL);
+	gpio_periph_init();
 
 	/* create GPIOs*/
-	BUT = gpio_create(BUTT_PORT, BUTT_PIN);
+	err = gpio_init(&BUT, BUTT_PORT, BUTT_PIN);
 	/* choose from PD12, 13, 14, 15 for onboard leds */
-	LED_HI = gpio_create(3, 15);
-	LED_LOW = gpio_create(3, 13);
-	status_led = gpio_create(3, 12);
+	err = gpio_init(&LED_HI, 3, 15);
+	err = gpio_init(&LED_LOW, 3, 13);
+	err = gpio_init(&status_led, 3, 12);
 
 	gpio_configure_input(&BUT, PULLDOWN);
 	gpio_configure_output(&LED_HI, PUSH_PULL);
@@ -172,11 +173,11 @@ int main()
 
 		if (avg > thr.val) {
 			/* TODO: dont use ops call. use api */
-			LED_HI.ops->write_val(&LED_HI, HIGH);
-			LED_LOW.ops->write_val(&LED_LOW, LOW);
+			gpio_write(&LED_HI, HIGH);
+			gpio_write(&LED_LOW, LOW);
 		} else {
-			LED_HI.ops->write_val(&LED_HI, LOW);
-			LED_LOW.ops->write_val(&LED_LOW, HIGH);
+			gpio_write(&LED_HI, LOW);
+			gpio_write(&LED_LOW, HIGH);
 		}
 	}
 	
