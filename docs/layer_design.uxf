@@ -1,0 +1,82 @@
+<diagram program="umletino" version="15.0.0"><zoom_level>6</zoom_level><help_text>Space for diagram notes</help_text><element><id>UMLClass</id><coordinates><x>384</x><y>78</y><w>204</w><h>192</h></coordinates><panel_attributes>I2S Driver
+--
+-gpio_data: GPIO
+-gpio_clk: GPIO
+-dma: dma
+-data:
+    -instance:int
+    -enum mode: enum
+    -enum standard: enum
+    -enum fmt: enum
+    -frequency: int
+    -rxdma_enabled: bool
+    -txdma_enabled: bool
+    -en: bool
+--
+-ops:
+    -configure
+    -enable
+--
+api:
+    -i2s_configure
+    -i2s_enable
+    -i2s_disable
+--
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>540</x><y>372</y><w>126</w><h>210</h></coordinates><panel_attributes>GPIO
+--
+-data:
+    -PORT: uint
+    -PIN: uint
+    -mode: enum
+    -otype: enum
+    -ptype: enum
+    -af: enum
+--
+-ops:
+    -configure: int
+    -write_val: int
+    -read_val: int
+    -configure_interrupt: int
+--
+api:
+    gpio_configure_output
+    gpio_configure_input
+    gpio_configure_interrupt
+    gpio_configure_af
+    gpio_read
+    gpio_write
+    gpio_init</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>198</x><y>372</y><w>204</w><h>282</h></coordinates><panel_attributes>DMA Driver
+--
+-data:
+  -dmac:int
+  -stream:int
+  -channel:int
+  -dir:enum
+  -p_inc:bool
+  -m_inc:bool
+  -p_align:enum
+  -m_align:enum
+  -circ:enum
+  -priority:enum
+  -fifo_mode:bool
+  -en:bool
+--
+-ops:
+    -configure
+    -set_fata_cfg
+    -enable
+    -pause
+    -resume
+    -remove
+    -interrupt_enable
+--
+api:
+    -dma_configure
+    -dma_set_data_cfg
+    -dma_enable
+    -dma_pause
+    -dma_resume
+    -dma_remove
+    -dma_int_enable
+--
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>540</x><y>264</y><w>78</w><h>120</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes><additional_attributes>10;10;110;180</additional_attributes></element><element><id>Relation</id><coordinates><x>300</x><y>264</y><w>156</w><h>120</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes><additional_attributes>240;10;10;180</additional_attributes></element></diagram>
